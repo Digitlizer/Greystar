@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Recap — Outreach Campaign Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sage:#607067;
+    --sage-dark:#43504A;
+    --sage-light:#8A9790;
+    --cream:#F0EBE3;
+    --cream-deep:#E4DCD0;
+    --copper:#90624D;
+    --copper-light:#B98972;
+    --ink:#2A2E2B;
+    --ink-soft:#6E756F;
+    --paper:#FFFFFF;
+    --page:#F7F4EF;
+    --line:#E0D9CE;
+    --r-lg:14px;
+    --r-md:9px;
+    --shadow:0 1px 2px rgba(50,45,35,.04), 0 10px 28px -20px rgba(50,45,35,.30);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--page);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1240px;margin:0 auto;padding:0 24px 80px;}
+
+  /* ===== HEADER BAND ===== */
+  .masthead{
+    background:var(--sage);
+    color:#fff;
+    padding:30px 0 70px;
+    margin-bottom:-46px;
+  }
+  .masthead .wrap{padding-bottom:0;}
+  .mast-inner{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:20px;}
+  .eyebrow{
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    font-weight:600;color:rgba(255,255,255,.72);margin-bottom:8px;
+  }
+  .masthead h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1;
+  }
+  .masthead p{font-size:13.5px;color:rgba(255,255,255,.78);margin-top:8px;max-width:440px;line-height:1.5;}
+
+  .controls{display:flex;gap:9px;align-items:center;}
+  .btn{
+    display:inline-flex;align-items:center;gap:7px;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:12.5px;
+    padding:9px 15px;border-radius:999px;cursor:pointer;
+    border:1px solid rgba(255,255,255,.3);
+    background:transparent;color:#fff;
+    transition:background .15s,border-color .15s,transform .1s;
+  }
+  .btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.55);}
+  .btn:active{transform:scale(.98);}
+  .btn.solid{background:#fff;color:var(--sage-dark);border-color:#fff;}
+  .btn.solid:hover{background:var(--cream);}
+  .btn svg{width:14px;height:14px;flex-shrink:0;}
+  .spin{animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .sync-line{font-size:11.5px;color:rgba(255,255,255,.65);margin-top:9px;text-align:right;}
+  .status-pill{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:10.5px;font-weight:600;letter-spacing:.02em;
+    padding:4px 10px;border-radius:999px;margin-bottom:9px;
+    background:rgba(255,255,255,.16);color:#fff;
+  }
+  .status-pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .status-pill.err{background:#7A3B32;}
+
+  /* ===== KPI STRIP ===== */
+  .kpi-strip{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--r-lg);
+    box-shadow:var(--shadow);
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    overflow:hidden;
+    margin-bottom:34px;
+  }
+  .kpi{padding:18px 20px;border-right:1px solid var(--line);}
+  .kpi:last-child{border-right:none;}
+  .kpi .k-label{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px;}
+  .kpi .k-value{font-family:'Space Grotesk',sans-serif;font-size:25px;font-weight:700;color:var(--sage-dark);letter-spacing:-.01em;}
+  .kpi .k-value.copper{color:var(--copper);}
+  .kpi .k-sub{font-size:11px;color:var(--ink-soft);margin-top:3px;}
+
+  /* ===== LAYOUT ===== */
+  .layout{display:grid;grid-template-columns:260px 1fr;gap:30px;align-items:start;}
+
+  /* ===== SIDEBAR ===== */
+  .side{position:sticky;top:24px;display:flex;flex-direction:column;gap:16px;}
+  .panel{
+    background:var(--paper);border:1px solid var(--line);
+    border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow);
+  }
+  .panel h3{
+    font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px;
+  }
+  .prog-ring{display:flex;align-items:center;gap:14px;}
+  .prog-ring svg{transform:rotate(-90deg);flex-shrink:0;}
+  .ring-bg{fill:none;stroke:var(--cream-deep);stroke-width:7;}
+  .ring-fg{fill:none;stroke:var(--sage);stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1);}
+  .prog-text .big{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:var(--sage-dark);line-height:1;}
+  .prog-text .small{font-size:11.5px;color:var(--ink-soft);margin-top:4px;line-height:1.35;}
+
+  .legend-row{display:flex;align-items:center;gap:9px;margin-bottom:11px;font-size:12.5px;}
+  .legend-row:last-child{margin-bottom:0;}
+  .swatch{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+  .swatch.sage{background:var(--sage);}
+  .swatch.copper{background:var(--copper);}
+  .swatch.pending{background:#fff;border:2px solid var(--cream-deep);}
+  .legend-count{margin-left:auto;font-weight:700;font-family:'Space Grotesk',sans-serif;color:var(--ink);font-size:12.5px;}
+
+  .mix-bar{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--cream-deep);margin-bottom:12px;}
+  .mix-seg{height:100%;}
+  .mix-seg.sage{background:var(--sage);}
+  .mix-seg.copper{background:var(--copper);}
+
+  /* ===== TIMELINE ===== */
+  .tl{position:relative;padding-left:34px;}
+  .tl::before{
+    content:'';position:absolute;left:11px;top:6px;bottom:6px;width:3px;
+    background:linear-gradient(to bottom,var(--cream-deep),var(--line));border-radius:2px;
+  }
+
+  .month-mark{position:relative;margin:26px 0 16px;}
+  .month-mark:first-child{margin-top:0;}
+  .month-mark::before{
+    content:'';position:absolute;left:-29px;top:50%;transform:translateY(-50%);
+    width:15px;height:15px;border-radius:4px;background:var(--sage-dark);
+    border:3px solid var(--page);
+  }
+  .month-mark h2{
+    font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;
+    color:var(--sage-dark);display:inline-block;letter-spacing:-.01em;
+  }
+  .month-mark .tally{
+    font-size:11px;font-weight:600;color:var(--sage);
+    background:var(--cream);padding:3px 9px;border-radius:999px;margin-left:9px;
+  }
+
+  .stop{position:relative;margin-bottom:14px;}
+  .stop::before{
+    content:'';position:absolute;left:-28px;top:22px;
+    width:13px;height:13px;border-radius:50%;
+    background:#fff;border:3px solid var(--sage);
+    box-shadow:0 0 0 3px var(--page);
+  }
+  .stop.local::before{border-color:var(--copper);}
+  .stop.pending::before{border-color:var(--cream-deep);}
+
+  .stop-card{
+    background:var(--paper);border:1px solid var(--line);
+    border-left:3px solid var(--sage);
+    border-radius:var(--r-md);padding:16px 18px;
+    box-shadow:var(--shadow);
+    transition:transform .14s,box-shadow .14s;
+  }
+  .stop.local .stop-card{border-left-color:var(--copper);}
+  .stop.pending .stop-card{border-left-color:var(--cream-deep);background:#FCFAF7;}
+  .stop-card:hover{transform:translateX(2px);box-shadow:0 2px 5px rgba(50,45,35,.06),0 14px 30px -20px rgba(50,45,35,.4);}
+
+  .stop-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+  .stop-id{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;}
+  .stop-date{
+    font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;
+    color:var(--sage-dark);background:var(--cream);
+    padding:4px 10px;border-radius:5px;white-space:nowrap;letter-spacing:.01em;
+  }
+  .stop-venue{font-family:'Space Grotesk',sans-serif;font-size:15.5px;font-weight:600;color:var(--ink);letter-spacing:-.01em;}
+  .type-chip{
+    font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    padding:4px 9px;border-radius:999px;white-space:nowrap;
+    background:var(--sage);color:#fff;
+  }
+  .type-chip.local{background:var(--copper);}
+  .type-chip.none{background:var(--cream-deep);color:var(--ink-soft);}
+
+  .weather-tag{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:11.5px;color:var(--ink-soft);margin-top:9px;
+  }
+  .weather-tag svg{width:13px;height:13px;}
+
+  .metrics{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));
+    gap:12px;margin-top:15px;padding-top:15px;border-top:1px solid var(--line);
+  }
+  .metric .m-num{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--ink);line-height:1.1;}
+  .metric .m-lbl{font-size:10.5px;color:var(--ink-soft);margin-top:3px;letter-spacing:.02em;}
+
+  .traffic-dots{display:flex;gap:4px;margin-top:4px;}
+  .tdot{width:9px;height:9px;border-radius:50%;background:var(--cream-deep);}
+  .tdot.on{background:var(--copper);}
+
+  .pending-note{
+    margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);
+    font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:7px;
+  }
+  .pending-note svg{width:14px;height:14px;color:var(--sage-light);flex-shrink:0;}
+
+  .notes-toggle{
+    margin-top:14px;font-size:11.5px;font-weight:600;color:var(--sage);
+    background:none;border:none;cursor:pointer;padding:0;
+    display:inline-flex;align-items:center;gap:5px;font-family:'Inter',sans-serif;
+  }
+  .notes-toggle:hover{color:var(--sage-dark);text-decoration:underline;}
+  .notes-toggle svg{width:12px;height:12px;transition:transform .2s;}
+  .notes-toggle.open svg{transform:rotate(180deg);}
+  .notes{display:none;margin-top:13px;padding-top:13px;border-top:1px solid var(--line);flex-direction:column;gap:13px;}
+  .notes.open{display:flex;}
+  .note-block strong{
+    display:block;font-size:10.5px;font-weight:700;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--copper);margin-bottom:4px;
+  }
+  .note-block p{font-size:12.5px;color:var(--ink-soft);line-height:1.6;white-space:pre-line;}
+
+  /* ===== EMPTY ===== */
+  .empty{text-align:center;padding:70px 20px;color:var(--ink-soft);}
+  .empty svg{width:40px;height:40px;color:var(--sage-light);margin-bottom:14px;}
+  .empty h3{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:var(--sage-dark);margin-bottom:6px;}
+  .empty p{font-size:13px;max-width:330px;margin:0 auto;line-height:1.5;}
+
+  /* ===== RESPONSIVE ===== */
+  @media(max-width:940px){
+    .layout{grid-template-columns:1fr;}
+    .side{position:static;flex-direction:row;flex-wrap:wrap;}
+    .side .panel{flex:1;min-width:230px;}
+  }
+  @media(max-width:600px){
+    .wrap{padding:0 14px 60px;}
+    .masthead{padding:24px 0 64px;}
+    .masthead h1{font-size:24px;}
+    .mast-inner{flex-direction:column;}
+    .sync-line{text-align:left;}
+    .kpi{border-right:none;border-bottom:1px solid var(--line);}
+    .tl{padding-left:26px;}
+    .tl::before{left:7px;}
+    .stop::before{left:-25px;}
+    .month-mark::before{left:-26px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="wrap">
+    <div class="mast-inner">
+      <div>
+        <div class="eyebrow">Community Outreach Program</div>
+        <h1>Event Recap</h1>
+        <p>Live route of light rail and local event outreach, pulled straight from the team's shared tracker.</p>
+      </div>
+      <div style="text-align:right;">
+        <div id="statusPill"></div>
+        <div class="controls">
+          <button class="btn" id="refreshBtn" onclick="refreshData()">
+            <svg id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Refresh
+          </button>
+          <button class="btn solid" onclick="openSheet()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Source sheet
+          </button>
+        </div>
+        <div class="sync-line" id="syncLine">Loading&hellip;</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="kpi-strip" id="kpiStrip"></div>
+
+  <div class="layout">
+    <aside class="side">
+      <div class="panel">
+        <h3>Campaign progress</h3>
+        <div class="prog-ring">
+          <svg width="66" height="66" viewBox="0 0 66 66">
+            <circle class="ring-bg" cx="33" cy="33" r="27"></circle>
+            <circle class="ring-fg" id="progRing" cx="33" cy="33" r="27"
+                    stroke-dasharray="169.6" stroke-dashoffset="169.6"></circle>
+          </svg>
+          <div class="prog-text">
+            <div class="big" id="progPct">0%</div>
+            <div class="small" id="progSub">0 of 0 recapped</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Outreach mix</h3>
+        <div class="mix-bar" id="mixBar"></div>
+        <div id="legend"></div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="tl" id="timeline"></div>
+    </main>
+  </div>
+</div>
+
+<script>
+/* ===============================================================
+   CONFIG
+   API_URL   = https://script.google.com/macros/s/AKfycbyz2PCuhQ22pBYkuJp7VFy6KuSDbNVqViFIGGJbvQT6n2v0lr0RihheWUUMAH6qOD2v/exec
+   SHEET_URL = link to the Google Sheet, used by "Source sheet"
+   Leave API_URL blank to preview with sample data.
+   =============================================================== */
+const API_URL   = "";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1ASVPm2447fPjnVJv4L7tI0Ntqvd-aQJltIAHX8RVGNI/edit";
+
+let events = [];
+
+/* Sample rows mirror the real sheet: the first two are recapped,
+   the rest are scheduled but not yet filled in. */
+const sampleEvents = [
+  { date:"2026-10-06", outreachType:"Light Rail Outreach", venue:"Kent/Des Moines Station",
+    weather:"Overcast, 54\u00B0F", impressions:1850, engaged:240, flyers:210, footTraffic:4,
+    overview:"Morning commute window delivered the strongest flow. Team set up near the north platform entrance where riders queue before boarding.",
+    consumerFeedback:"Several riders asked about weekend service changes. Strong interest in the printed route maps.",
+    managerFeedback:"Good first outing. Recommend arriving 20 minutes earlier next time to catch the 7am wave.",
+    hasRecap:true },
+  { date:"2026-10-08", outreachType:"Light Rail Outreach", venue:"Tukwila International Boulevard Station",
+    weather:"Light rain, 51\u00B0F", impressions:1420, engaged:185, flyers:160, footTraffic:3,
+    overview:"Rain cut foot traffic noticeably. Team moved under the covered walkway which kept the materials dry and conversations going.",
+    consumerFeedback:"Riders were receptive but moved quickly. Shorter conversations than Tuesday.",
+    managerFeedback:"Weather dependent location. Worth a repeat visit on a dry day.",
+    hasRecap:true },
+  { date:"2026-10-10", outreachType:"Local Event Outreach", venue:"Kent Farmers Market",
+    weather:"", impressions:0, engaged:0, flyers:0, footTraffic:0,
+    overview:"", consumerFeedback:"", managerFeedback:"", hasRecap:false },
+  { date:"2026-10-13", outreachType:"Light Rail Outreach", venue:"Rainier Beach Station",
+    weather:"", impressions:0, engaged:0, flyers:0, footTraffic:0,
+    overview:"", consumerFeedback:"", managerFeedback:"", hasRecap:false },
+  { date:"2026-10-15", outreachType:"Light Rail Outreach", venue:"Othello Station",
+    weather:"", impressions:0, engaged:0, flyers:0, footTraffic:0,
+    overview:"", consumerFeedback:"", managerFeedback:"", hasRecap:false },
+  { date:"2026-11-05", outreachType:"Local Event Outreach", venue:"First Thursday Artwalk",
+    weather:"", impressions:0, engaged:0, flyers:0, footTraffic:0,
+    overview:"", consumerFeedback:"", managerFeedback:"", hasRecap:false }
+];
+
+/* ===============================================================
+   HELPERS
+   =============================================================== */
+function fmt(n){ return Number(n||0).toLocaleString(); }
+
+/* Parse "YYYY-MM-DD" as a LOCAL date.
+   new Date("2026-10-06") is read as UTC midnight, which rolls back
+   a day for anyone west of UTC. This keeps the day correct. */
+function parseLocalDate(d){
+  if(d instanceof Date) return d;
+  const s = String(d||'').trim();
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+  return new Date(s);
+}
+function monthKey(d){ const t=parseLocalDate(d); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0'); }
+function monthLabel(d){ return parseLocalDate(d).toLocaleDateString('en-US',{month:'long',year:'numeric'}); }
+function dateChip(d){
+  const t=parseLocalDate(d);
+  if(isNaN(t.getTime())) return 'Date TBD';
+  return t.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
+function isLocal(e){ return (e.outreachType||'').toLowerCase().indexOf('local') === 0; }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function setStatus(kind,label){
+  document.getElementById('statusPill').innerHTML =
+    '<span class="status-pill '+(kind==='err'?'err':'')+'"><span class="dot"></span>'+label+'</span>';
+}
+function timeNow(){ return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+function openSheet(){ SHEET_URL ? window.open(SHEET_URL,'_blank') : alert('Set SHEET_URL in the config block.'); }
+
+/* ===============================================================
+   KPI STRIP
+   =============================================================== */
+function buildKpis(){
+  const strip = document.getElementById('kpiStrip');
+  if(!events.length){ strip.innerHTML=''; return; }
+
+  const done   = events.filter(function(e){ return e.hasRecap; });
+  const imp    = events.reduce(function(s,e){ return s+(e.impressions||0); },0);
+  const eng    = events.reduce(function(s,e){ return s+(e.engaged||0); },0);
+  const fly    = events.reduce(function(s,e){ return s+(e.flyers||0); },0);
+  const rate   = imp ? Math.round((eng/imp)*100) : 0;
+  const traffs = done.filter(function(e){ return e.footTraffic>0; });
+  const avgT   = traffs.length
+    ? (traffs.reduce(function(s,e){ return s+e.footTraffic; },0)/traffs.length).toFixed(1)
+    : '—';
+
+  const kpis = [
+    {l:'Events scheduled',    v:fmt(events.length), s:done.length+' recapped'},
+    {l:'Total impressions',   v:fmt(imp)},
+    {l:'Consumers engaged',   v:fmt(eng), s:rate+'% of impressions'},
+    {l:'Flyers distributed',  v:fmt(fly)},
+    {l:'Avg. foot traffic',   v:avgT, s:'out of 5', copper:true}
+  ];
+
+  strip.innerHTML = kpis.map(function(k){
+    return '<div class="kpi">'+
+      '<div class="k-label">'+k.l+'</div>'+
+      '<div class="k-value'+(k.copper?' copper':'')+'">'+k.v+'</div>'+
+      (k.s?'<div class="k-sub">'+k.s+'</div>':'')+
+    '</div>';
+  }).join('');
+}
+
+/* ===============================================================
+   SIDEBAR
+   =============================================================== */
+function buildSidebar(){
+  const total = events.length;
+  const done  = events.filter(function(e){ return e.hasRecap; }).length;
+  const pct   = total ? Math.round((done/total)*100) : 0;
+
+  const circ = 2*Math.PI*27;
+  document.getElementById('progRing').setAttribute('stroke-dashoffset', circ - (pct/100)*circ);
+  document.getElementById('progPct').textContent = pct+'%';
+  document.getElementById('progSub').textContent = done+' of '+total+' recapped';
+
+  const rail    = events.filter(function(e){ return !isLocal(e) && e.outreachType; }).length;
+  const local   = events.filter(isLocal).length;
+  const pending = total - done;
+
+  const railPct  = total ? (rail/total)*100  : 0;
+  const localPct = total ? (local/total)*100 : 0;
+
+  document.getElementById('mixBar').innerHTML =
+    '<div class="mix-seg sage" style="width:'+railPct+'%"></div>'+
+    '<div class="mix-seg copper" style="width:'+localPct+'%"></div>';
+
+  document.getElementById('legend').innerHTML =
+    '<div class="legend-row"><span class="swatch sage"></span>Light Rail Outreach<span class="legend-count">'+rail+'</span></div>'+
+    '<div class="legend-row"><span class="swatch copper"></span>Local Event Outreach<span class="legend-count">'+local+'</span></div>'+
+    '<div class="legend-row"><span class="swatch pending"></span>Awaiting recap<span class="legend-count">'+pending+'</span></div>';
+}
+
+/* ===============================================================
+   TIMELINE
+   =============================================================== */
+function buildTimeline(){
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = '';
+
+  if(!events.length){
+    tl.innerHTML =
+      '<div class="empty">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+
+        '<h3>No events yet</h3>'+
+        '<p>Once the team adds rows to the recap sheet, every stop will appear here automatically.</p>'+
+      '</div>';
+    return;
+  }
+
+  // Sort by date, then group by month
+  const sorted = events.slice().sort(function(a,b){
+    return parseLocalDate(a.date) - parseLocalDate(b.date);
+  });
+
+  const groups = {};
+  const order  = [];
+  sorted.forEach(function(e){
+    const k = monthKey(e.date);
+    if(!groups[k]){ groups[k] = []; order.push(k); }
+    groups[k].push(e);
+  });
+
+  let html = '';
+  order.forEach(function(k){
+    const list = groups[k];
+    html += '<div class="month-mark"><h2>'+monthLabel(list[0].date)+'</h2>'+
+            '<span class="tally">'+list.length+' stop'+(list.length===1?'':'s')+'</span></div>';
+    list.forEach(function(e,i){ html += stopHtml(e, k+'-'+i); });
+  });
+  tl.innerHTML = html;
+}
+
+function stopHtml(e, uid){
+  const local   = isLocal(e);
+  const pending = !e.hasRecap;
+
+  const cls = 'stop'+(local?' local':'')+(pending?' pending':'');
+  const chipCls = e.outreachType ? (local?'type-chip local':'type-chip') : 'type-chip none';
+  const chipTxt = e.outreachType ? (local?'Local Event':'Light Rail') : 'Unassigned';
+
+  // Foot traffic as 5 dots
+  let dots = '';
+  for(let i=1;i<=5;i++){ dots += '<span class="tdot'+(i<=(e.footTraffic||0)?' on':'')+'"></span>'; }
+
+  const body = pending
+    ? '<div class="pending-note">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+
+        'Scheduled. Recap not submitted yet.'+
+      '</div>'
+    : '<div class="metrics">'+
+        '<div class="metric"><div class="m-num">'+fmt(e.impressions)+'</div><div class="m-lbl">Impressions</div></div>'+
+        '<div class="metric"><div class="m-num">'+fmt(e.engaged)+'</div><div class="m-lbl">Engaged</div></div>'+
+        '<div class="metric"><div class="m-num">'+fmt(e.flyers)+'</div><div class="m-lbl">Flyers</div></div>'+
+        '<div class="metric"><div class="traffic-dots">'+dots+'</div><div class="m-lbl">Foot traffic</div></div>'+
+      '</div>';
+
+  // Write-ups only render when at least one is filled in
+  const noteParts = [];
+  if(e.overview)         noteParts.push('<div class="note-block"><strong>Event overview</strong><p>'+esc(e.overview)+'</p></div>');
+  if(e.consumerFeedback) noteParts.push('<div class="note-block"><strong>Consumer feedback &amp; highlights</strong><p>'+esc(e.consumerFeedback)+'</p></div>');
+  if(e.managerFeedback)  noteParts.push('<div class="note-block"><strong>Manager feedback</strong><p>'+esc(e.managerFeedback)+'</p></div>');
+
+  const notes = noteParts.length
+    ? '<button class="notes-toggle" onclick="toggleNotes(this,\''+uid+'\')">'+
+        'Read the write-up'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'+
+      '</button>'+
+      '<div class="notes" id="n-'+uid+'">'+noteParts.join('')+'</div>'
+    : '';
+
+  return '<div class="'+cls+'">'+
+    '<div class="stop-card">'+
+      '<div class="stop-top">'+
+        '<div class="stop-id">'+
+          '<span class="stop-date">'+dateChip(e.date)+'</span>'+
+          '<span class="stop-venue">'+esc(e.venue||'TBD')+'</span>'+
+        '</div>'+
+        '<span class="'+chipCls+'">'+chipTxt+'</span>'+
+      '</div>'+
+      (e.weather
+        ? '<div class="weather-tag">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.9" y1="4.9" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.1" y2="19.1"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.9" y1="19.1" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.1" y2="4.9"/></svg>'+
+            esc(e.weather)+
+          '</div>'
+        : '')+
+      body+
+      notes+
+    '</div>'+
+  '</div>';
+}
+
+function toggleNotes(btn, uid){
+  const box = document.getElementById('n-'+uid);
+  if(!box) return;
+  box.classList.toggle('open');
+  btn.classList.toggle('open');
+  btn.childNodes[0].nodeValue = box.classList.contains('open') ? 'Hide the write-up' : 'Read the write-up';
+}
+
+/* ===============================================================
+   DATA LOADING
+   =============================================================== */
+async function loadData(manual){
+  const btn  = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  const sync = document.getElementById('syncLine');
+
+  if(manual){ icon.classList.add('spin'); btn.disabled = true; }
+
+  if(!API_URL){
+    events = sampleEvents;
+    setStatus('sample','Sample data — add API_URL to go live');
+    sync.textContent = 'Preview mode';
+    render();
+    if(manual){ icon.classList.remove('spin'); btn.disabled = false; }
+    return;
+  }
+
+  try{
+    const res = await fetch(API_URL, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    events = data.events || [];
+    setStatus('live','Live — connected to Google Sheets');
+    sync.textContent = 'Last refreshed at '+timeNow();
+  }catch(err){
+    if(!events.length) events = sampleEvents;
+    setStatus('err','Could not reach the sheet — showing last known data');
+    sync.textContent = 'Last attempted at '+timeNow();
+    console.error('Load failed:', err);
+  }
+
+  render();
+  if(manual){ icon.classList.remove('spin'); btn.disabled = false; }
+}
+
+function render(){ buildKpis(); buildSidebar(); buildTimeline(); }
+function refreshData(){ loadData(true); }
+
+loadData(false);
+</script>
+</body>
+</html>
