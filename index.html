@@ -197,13 +197,20 @@
   .weather-tag svg{width:13px;height:13px;}
 
   .metrics{
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));
-    gap:12px;margin-top:15px;padding-top:15px;border-top:1px solid var(--line);
+    margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
   }
-  .metric .m-num{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--ink);line-height:1.1;}
-  .metric .m-lbl{font-size:10.5px;color:var(--ink-soft);margin-top:3px;letter-spacing:.02em;}
+  .traffic-row{display:flex;align-items:center;gap:11px;flex-wrap:wrap;}
+  .traffic-row .m-lbl{
+    font-size:10.5px;font-weight:700;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--ink-soft);
+  }
+  .traffic-score{
+    font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;
+    color:var(--copper);line-height:1;
+  }
+  .traffic-score .of{font-size:11px;font-weight:600;color:var(--ink-soft);margin-left:1px;}
 
-  .traffic-dots{display:flex;gap:4px;margin-top:4px;}
+  .traffic-dots{display:inline-flex;gap:4px;}
   .tdot{width:9px;height:9px;border-radius:50%;background:var(--cream-deep);}
   .tdot.on{background:var(--copper);}
 
@@ -319,7 +326,7 @@
 <script>
 /* ===============================================================
    CONFIG
-      API_URL   = your Apps Script Web App /exec URL
+   API_URL   = https://script.google.com/macros/s/AKfycbyz2PCuhQ22pBYkuJp7VFy6KuSDbNVqViFIGGJbvQT6n2v0lr0RihheWUUMAH6qOD2v/exec
    SHEET_URL = link to the Google Sheet, used by "Source sheet"
    Leave API_URL blank to preview with sample data.
    =============================================================== */
@@ -332,28 +339,28 @@ let events = [];
    the rest are scheduled but not yet filled in. */
 const sampleEvents = [
   { date:"2026-10-06", outreachType:"Light Rail Outreach", venue:"Kent/Des Moines Station",
-    weather:"Overcast, 54\u00B0F", impressions:1850, engaged:240, flyers:210, footTraffic:4,
+    weather:"Overcast, 54\u00B0F", footTraffic:4,
     overview:"Morning commute window delivered the strongest flow. Team set up near the north platform entrance where riders queue before boarding.",
     consumerFeedback:"Several riders asked about weekend service changes. Strong interest in the printed route maps.",
     managerFeedback:"Good first outing. Recommend arriving 20 minutes earlier next time to catch the 7am wave.",
     hasRecap:true },
   { date:"2026-10-08", outreachType:"Light Rail Outreach", venue:"Tukwila International Boulevard Station",
-    weather:"Light rain, 51\u00B0F", impressions:1420, engaged:185, flyers:160, footTraffic:3,
+    weather:"Light rain, 51\u00B0F", footTraffic:3,
     overview:"Rain cut foot traffic noticeably. Team moved under the covered walkway which kept the materials dry and conversations going.",
     consumerFeedback:"Riders were receptive but moved quickly. Shorter conversations than Tuesday.",
     managerFeedback:"Weather dependent location. Worth a repeat visit on a dry day.",
     hasRecap:true },
   { date:"2026-10-10", outreachType:"Local Event Outreach", venue:"Kent Farmers Market",
-    weather:"", impressions:0, engaged:0, flyers:0, footTraffic:0,
+    weather:"", footTraffic:0,
     overview:"", consumerFeedback:"", managerFeedback:"", hasRecap:false },
   { date:"2026-10-13", outreachType:"Light Rail Outreach", venue:"Rainier Beach Station",
-    weather:"", impressions:0, engaged:0, flyers:0, footTraffic:0,
+    weather:"", footTraffic:0,
     overview:"", consumerFeedback:"", managerFeedback:"", hasRecap:false },
   { date:"2026-10-15", outreachType:"Light Rail Outreach", venue:"Othello Station",
-    weather:"", impressions:0, engaged:0, flyers:0, footTraffic:0,
+    weather:"", footTraffic:0,
     overview:"", consumerFeedback:"", managerFeedback:"", hasRecap:false },
   { date:"2026-11-05", outreachType:"Local Event Outreach", venue:"First Thursday Artwalk",
-    weather:"", impressions:0, engaged:0, flyers:0, footTraffic:0,
+    weather:"", footTraffic:0,
     overview:"", consumerFeedback:"", managerFeedback:"", hasRecap:false }
 ];
 
@@ -396,21 +403,20 @@ function buildKpis(){
   if(!events.length){ strip.innerHTML=''; return; }
 
   const done   = events.filter(function(e){ return e.hasRecap; });
-  const imp    = events.reduce(function(s,e){ return s+(e.impressions||0); },0);
-  const eng    = events.reduce(function(s,e){ return s+(e.engaged||0); },0);
-  const fly    = events.reduce(function(s,e){ return s+(e.flyers||0); },0);
-  const rate   = imp ? Math.round((eng/imp)*100) : 0;
+  const rail   = events.filter(function(e){ return !isLocal(e) && e.outreachType; }).length;
+  const local  = events.filter(isLocal).length;
+  const pend   = events.length - done.length;
   const traffs = done.filter(function(e){ return e.footTraffic>0; });
   const avgT   = traffs.length
     ? (traffs.reduce(function(s,e){ return s+e.footTraffic; },0)/traffs.length).toFixed(1)
     : '—';
 
   const kpis = [
-    {l:'Events scheduled',    v:fmt(events.length), s:done.length+' recapped'},
-    {l:'Total impressions',   v:fmt(imp)},
-    {l:'Consumers engaged',   v:fmt(eng), s:rate+'% of impressions'},
-    {l:'Flyers distributed',  v:fmt(fly)},
-    {l:'Avg. foot traffic',   v:avgT, s:'out of 5', copper:true}
+    {l:'Events scheduled',      v:fmt(events.length)},
+    {l:'Recaps submitted',      v:fmt(done.length), s:pend+' still awaiting'},
+    {l:'Light rail stops',      v:fmt(rail)},
+    {l:'Local event stops',     v:fmt(local)},
+    {l:'Avg. foot traffic',     v:avgT, s:'out of 5', copper:true}
   ];
 
   strip.innerHTML = kpis.map(function(k){
@@ -510,10 +516,11 @@ function stopHtml(e, uid){
         'Scheduled. Recap not submitted yet.'+
       '</div>'
     : '<div class="metrics">'+
-        '<div class="metric"><div class="m-num">'+fmt(e.impressions)+'</div><div class="m-lbl">Impressions</div></div>'+
-        '<div class="metric"><div class="m-num">'+fmt(e.engaged)+'</div><div class="m-lbl">Engaged</div></div>'+
-        '<div class="metric"><div class="m-num">'+fmt(e.flyers)+'</div><div class="m-lbl">Flyers</div></div>'+
-        '<div class="metric"><div class="traffic-dots">'+dots+'</div><div class="m-lbl">Foot traffic</div></div>'+
+        '<div class="traffic-row">'+
+          '<span class="m-lbl">Foot traffic</span>'+
+          '<span class="traffic-dots">'+dots+'</span>'+
+          '<span class="traffic-score">'+(e.footTraffic||0)+'<span class="of">/5</span></span>'+
+        '</div>'+
       '</div>';
 
   // Write-ups only render when at least one is filled in
